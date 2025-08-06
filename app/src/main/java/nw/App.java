@@ -111,6 +111,7 @@ public class App {
 
                     // handle the data for each event to display a notification
                     switch (event) {
+                        case "message.created.truncated":
                         case "message.created": // received email
                             JsonObject obj = jobj.get("data").getAsJsonObject()
                                     .get("object").getAsJsonObject();
@@ -118,6 +119,7 @@ public class App {
                             createNotification(obj.get("subject").getAsString(),
                                     obj.get("snippet").getAsString());
                             break;
+                        case "message.updated.truncated":
                         case "message.updated": // email had its data updated (set to read, flagged, etc)
                             break;
                         default: // unknown event
@@ -132,10 +134,11 @@ public class App {
                     break;
             }
             
+            // return 200 status code to prevent nylas from marking the webhook interaction as "failed"
+            exchange.sendResponseHeaders(200, ret != null ? ret.getBytes().length : 0);
             if (ret != null) {
                 // send return value if we have something to say
                 exchange.getResponseHeaders().add("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(200, ret.getBytes().length);
                 OutputStream stream = exchange.getResponseBody();
                 stream.write(ret.getBytes());
                 stream.close();
